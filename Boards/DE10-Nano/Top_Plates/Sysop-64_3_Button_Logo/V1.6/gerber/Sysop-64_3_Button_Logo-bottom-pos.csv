@@ -1,0 +1,6 @@
+Ref,Val,Package,PosX,PosY,Rot,Side
+"J1","TSM-120-03-S-DV-A","SAMTEC_TSM-120-03-S-DV-A",86.800000,-52.230000,180.000000,bottom
+"R1","10K","R_0805_HandSoldering",103.700000,-70.150000,0.000000,bottom
+"R2","10K","R_0805_HandSoldering",87.050000,-70.150000,0.000000,bottom
+"R3","480 Ohm","R_0805_HandSoldering",93.650000,-82.750000,270.000000,bottom
+"R4","480 Ohm","R_0805_HandSoldering",78.900000,-82.750000,270.000000,bottom
