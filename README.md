@@ -19,6 +19,12 @@
 
 ## 📢 News and Updates
 
+- 📃 2025.11.22: [Alpha preview FPGA core update 5](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-5) released 
+- ▶️ 2025.11.20: Commodore 64 MCP Server video released on YouTube
+- ▶️ 2025.11.07: More Colors Than the Amiga On Your Commodore 64 video released on YouTube
+- ▶️ 2025.09.13: Xbox Controllers on the Commodore 64 video released on YouTube
+- 📃 2025.09.29: [Alpha preview FPGA core update 4](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-4) released 
+- 📃 2025.08.27: [Alpha preview bug fix 1](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-bugfix-1) released 
 - 📃 2025.08.11: Initial github commit
 - ▶️ 2025.08.10: Year of Linux on the C64 video released on YouTube
 - ▶️ 2025.06.03: Introducing Sysop-64 video released on YouTube
