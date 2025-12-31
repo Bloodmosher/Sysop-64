@@ -19,6 +19,9 @@
 
 ## 📢 News and Updates
 
+- ▶️ 2025.12.30: SID Wizard Super Powers video released on YouTube
+- 📃 2025.12.27: [Alpha preview FPGA core update 122725](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-122725) released 
+- 📃 2025.12.20: [Alpha preview FPGA core update 122025](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-122025) released 
 - 📃 2025.11.22: [Alpha preview FPGA core update 5](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-5) released 
 - ▶️ 2025.11.20: Commodore 64 MCP Server video released on YouTube
 - ▶️ 2025.11.07: More Colors Than the Amiga On Your Commodore 64 video released on YouTube
@@ -80,6 +83,7 @@
 - NTSC "old" and Drean machines are NOT supported at this time
 - DE10-Nano carrier board gerbers and SD image are included in this repo
 - **Reloaded MK2 motherboard is not currently supported**
+- **C64 Ultimate is not currently supported**
 
 ### Passthrough Port
 Most cartridges should work via the passthrough port, however some are more sensitive to the additional path length and sharing of the signals. **Make sure you have disabled the Sysop-64's IO space when using other cartridges** (remove "cmd 7" from c64init.sh or use "cmd 8" after boot). Examples that have been tested and seem to work well:
@@ -112,7 +116,7 @@ The EasyFlash 3 is an example found to be more sensitive, e.g. some games failed
 ## 📋 Roadmap
 
 - [x] Release PCB gerbers, BOM and CPL files 🔥
-- [ ] Release Alpha software preview SD image (🔥Coming Soon 🔥)
+- [ ] Release Alpha software preview SD image (🔥Available for alpha testers🔥)
 - [ ] Release demo and tools source code (🔥Coming Soon 🔥)
 - [ ] EasyFlash cartridge support (proof of concept working)
 - [ ] Advanced cartridge support
