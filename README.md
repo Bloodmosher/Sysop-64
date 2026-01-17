@@ -19,6 +19,8 @@
 
 ## 📢 News and Updates
 
+- 📃 2026.01.10: C64ML demo binaries available for alpha testers
+- ▶️ 2026.01.09: C64ML: Commodore 64 Markup Language video released on YouTube
 - ▶️ 2025.12.30: SID Wizard Super Powers video released on YouTube
 - 📃 2025.12.27: [Alpha preview FPGA core update 122725](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-122725) released 
 - 📃 2025.12.20: [Alpha preview FPGA core update 122025](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-122025) released 
