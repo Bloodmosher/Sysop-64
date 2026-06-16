@@ -19,6 +19,9 @@
 
 ## 📢 News and Updates
 
+- 📃 2026.06.16: [Alpha preview FPGA core update 060926](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-060926) released 
+- 📃 2026.06.12: 060926 update and C64ML HVSC demo available for alpha testers
+- ▶️ 2026.06.07: C64ML Update: Expanding What the C64 Can Do video released on YouTube
 - 📃 2026.01.10: C64ML demo binaries available for alpha testers
 - ▶️ 2026.01.09: C64ML: Commodore 64 Markup Language video released on YouTube
 - ▶️ 2025.12.30: SID Wizard Super Powers video released on YouTube
