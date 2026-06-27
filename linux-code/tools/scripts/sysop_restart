@@ -1,0 +1,29 @@
+#!/bin/bash
+# Sysop-64
+# https://github.com/Bloodmosher/Sysop-64
+#
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Sysop-64 Project
+
+# this script is executed when you press, then release buttons 2 and 3 together
+pkill sysop64
+pkill sysop_menu
+
+sysop64 > /dev/null &
+showpic /usr/local/bin/sysop-logo-1920x1080.png 2
+sleep 2
+sysop_menu > /dev/null &
+
+# disable any cartridge
+cmd 4 
+
+# reset the machine
+cmd 0
+
+sleep 2
+
+# clear any cartridge signature that might be lingering
+poke 8000 0 10
+
+# reset again to be sure
+cmd 0
