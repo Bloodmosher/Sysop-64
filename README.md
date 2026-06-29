@@ -19,6 +19,10 @@
 
 ## 📢 News and Updates
 
+- ▶️ 2026.06.27: C64 Doom: Doom On Sysop-64 video released on YouTube
+- 📃 2026.06.27: [Alpha preview FPGA core update 062726](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-062726) released, first release with PCM audio capability 
+- 📃 2026.06.27: [Chocolate Doom Sysop-64 fork](https://github.com/Bloodmosher/chocolate-doom-sysop-64) released
+- 📃 2026.06.27: Demo and tools source code released
 - 📃 2026.06.16: [Alpha preview FPGA core update 060926](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-060926) released 
 - 📃 2026.06.12: 060926 update and C64ML HVSC demo available for alpha testers
 - ▶️ 2026.06.07: C64ML Update: Expanding What the C64 Can Do video released on YouTube
@@ -110,7 +114,6 @@ The EasyFlash 3 is an example found to be more sensitive, e.g. some games failed
 
 ### 🖧 Shell Access and Network Setup
 - The provided image contains a single user account for "root" with password set to "root", **which you should change**
-- Note that the terminal shell application activated by button #3 does not require login
 - The provided SD image is set to use DHCP
 - To change this you'll need to locate the address assigned by your network or use a USB cable and connect via serial terminal application (e.g. PuTTY) using a baud rate of 115200
 - Edit the /etc/network/interfaces file if you prefer a fixed address, see the commented example in that file. Once changed, reboot.
@@ -120,9 +123,9 @@ The EasyFlash 3 is an example found to be more sensitive, e.g. some games failed
 
 ## 📋 Roadmap
 
-- [x] Release PCB gerbers, BOM and CPL files 🔥
+- [x] Release PCB gerbers, BOM and CPL files
+- [x] Release demo and tools source code
+- [x] EasyFlash cartridge support
 - [ ] Release Alpha software preview SD image (🔥Available for alpha testers🔥)
-- [ ] Release demo and tools source code (🔥Coming Soon 🔥)
-- [ ] EasyFlash cartridge support (proof of concept working)
+- [ ] Release FPGA verilog code and core development instructions (🔥Coming Soon 🔥) 🎤
 - [ ] Advanced cartridge support
-- [ ] Release FPGA verilog code and core development instructions 🎤
