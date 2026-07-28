@@ -101,24 +101,21 @@
  *   [37:30] cycle         — VIC-II character cycle within the raster line
  *   [46:38] vic_line      — VIC-II raster line (9 bits; 0–311 PAL)
  *   [52:47] sample_tick   — sub-PHI2 tick counter (6 bits)
- *   [57:53] (reserved)    — FPGA-internal sample-point flags (CPU write
- *                           window, PHI hi/lo points, data-valid, colour-
- *                           RAM write-enable).  Hardware-version specific;
- *                           not decoded here but present in s->raw.
+ *   [53]    _game         — _GAME
+ *   [54]    _exrom        — _EXROM
+ *   [55]    _loram        — _LORAM
+ *   [56]    _hiram        — _HIRAM
+ *   [57]    _charen       — _CHAREN
  *   [58]    _io2          — _IO2 ($DF00 range)
  *   [59]    _io1          — _IO1 ($DE00 range)
  *   [60]    _romh         — _ROMH
  *   [61]    _roml         — _ROML
  *   [62]    _nmi          — _NMI (not in struct; inspect s->raw if needed)
- *   [63]    (unused)
+ *   [63]    reserved
  *
  * This mirrors the decoding performed by the library's sysop_sampler_get_sample(),
  * allowing binary captures to be decoded offline without a hardware
  * connection.
- *
- * Note: _charen, _hiram, _loram, _exrom, _game are not populated here
- * because their bit positions conflict with the sample-point flags in the
- * current FPGA revision.  Inspect s->raw directly if you need them.
  */
 static void decode_sample_raw(uint64_t raw, struct sysop_c64_bus_sample *s)
 {
@@ -134,17 +131,15 @@ static void decode_sample_raw(uint64_t raw, struct sysop_c64_bus_sample *s)
     s->cycle         = (uint8_t)((raw >> 30) & 0xFF);
     s->vic_line      = (uint16_t)((raw >> 38) & 0x1FF);
     s->sample_tick   = (uint32_t)((raw >> 47) & 0x3F);
+    s->_game         = (uint8_t)((raw >> 53) & 1);
+    s->_exrom        = (uint8_t)((raw >> 54) & 1);
+    s->_loram        = (uint8_t)((raw >> 55) & 1);
+    s->_hiram        = (uint8_t)((raw >> 56) & 1);
+    s->_charen       = (uint8_t)((raw >> 57) & 1);
     s->_io2          = (uint8_t)((raw >> 58) & 1);
     s->_io1          = (uint8_t)((raw >> 59) & 1);
     s->_romh         = (uint8_t)((raw >> 60) & 1);
     s->_roml         = (uint8_t)((raw >> 61) & 1);
-
-    /* Not decoded — see comment above */
-    s->_charen = 0;
-    s->_hiram  = 0;
-    s->_loram  = 0;
-    s->_exrom  = 0;
-    s->_game   = 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -153,8 +148,8 @@ static void decode_sample_raw(uint64_t raw, struct sysop_c64_bus_sample *s)
 
 /*
  * Each column has a header label and a fixed display width (characters).
- * The total across all 16 columns plus 15 '│' separators is 66 chars,
- * comfortably fitting an 80-column terminal.
+ * The viewer exposes 21 columns.  The default visible set is trimmed to fit
+ * the current terminal width.
  *
  *  Col  Header  Width  Format
  *  ---  ------  -----  ------
@@ -180,8 +175,8 @@ static void decode_sample_raw(uint64_t raw, struct sysop_c64_bus_sample *s)
  *  19   EX        2    %2u   (_EXROM)
  *  20   GM        2    %2u   (_GAME)
  *
- * Note: CH/HI/LO/EX/GM are populated by sysop_sampler_get_sample() (RAM mode).
- * They are zeroed by the offline decode_sample_raw() used in file mode.
+ * CH/HI/LO/EX/GM are captured from the cartridge-port/control inputs in
+ * sample bits 57:53.
  */
 
 #define NUM_COLUMNS  21

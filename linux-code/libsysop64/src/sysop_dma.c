@@ -49,6 +49,13 @@ void sysop_dma_write_tag(uint32_t tag)
     *((uint32_t*)sysop64_cmd2_map) = val;
 }
 
+void sysop_dma_write_0001(uint16_t helper_patch_addr, uint8_t value)
+{
+    dma_wait_not_full();
+    uint32_t val = ((uint32_t)69 << 24) | ((uint32_t)helper_patch_addr << 8) | value;
+    *((uint32_t*)sysop64_cmd2_map) = val;
+}
+
 void sysop_poke_no_wait(uint16_t address, uint8_t value)
 {
     uint32_t val = ((uint32_t)1<<24) | (((uint32_t)address)<<8) | value;

@@ -1,3 +1,10 @@
+<!--
+Sysop-64
+https://github.com/Bloodmosher/Sysop-64
+
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
 # sysop_menu
 
 Interactive file-browser and game launcher for the Sysop-64 system.

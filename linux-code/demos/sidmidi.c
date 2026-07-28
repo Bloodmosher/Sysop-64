@@ -774,23 +774,25 @@ int main(int argc, char **argv)
 
                 if (ev->type == SND_SEQ_EVENT_NOTEON) {
                     if (ev->data.note.velocity > 0) {
-                        printf("[ALSA] Note ON  %s vel=%d\n",
+                        printf("[ALSA] Note ON  %s vel=%d ch=%d\n",
                                note_name(ev->data.note.note),
-                               ev->data.note.velocity);
+                               ev->data.note.velocity,
+                               ev->data.note.channel);
                         uint8_t msg[] = { MIDI_NOTE_ON,
                                           (uint8_t)ev->data.note.note,
                                           (uint8_t)ev->data.note.velocity };
                         send_midi_message(msg, 3, &recorder);
+
                     } else {
                         /* MIDI convention: Note On with velocity 0 = Note Off. */
-                        printf("[ALSA] Note OFF %s\n", note_name(ev->data.note.note));
+                        printf("[ALSA] Note OFF %s ch=%d\n", note_name(ev->data.note.note), ev->data.note.channel);
                         uint8_t msg[] = { MIDI_NOTE_OFF,
                                           (uint8_t)ev->data.note.note, 0 };
                         send_midi_message(msg, 3, &recorder);
                     }
 
                 } else if (ev->type == SND_SEQ_EVENT_NOTEOFF) {
-                    printf("[ALSA] Note OFF %s\n", note_name(ev->data.note.note));
+                    printf("[ALSA] Note OFF %s ch=%d\n", note_name(ev->data.note.note), ev->data.note.channel);
                     uint8_t msg[] = { MIDI_NOTE_OFF,
                                       (uint8_t)ev->data.note.note, 0 };
                     send_midi_message(msg, 3, &recorder);
@@ -804,13 +806,22 @@ int main(int argc, char **argv)
                     uint8_t msg[] = { MIDI_PITCH_BEND,
                                       (uint8_t)(val & 0x7F),
                                       (uint8_t)((val >> 7) & 0x7F) };
+                    
+                    printf("[ALSA] Pitch Bend ch=%d = %d\n", ev->data.control.channel, val);
                     send_midi_message(msg, 3, &recorder);
 
                 } else if (ev->type == SND_SEQ_EVENT_PGMCHANGE) {
                     int prog = ev->data.control.value;
-                    printf("[ALSA] Program Change %d\n", prog);
+                    printf("[ALSA] Program Change channel %d = %d\n", ev->data.control.channel, prog);
                     uint8_t msg[] = { MIDI_PROGRAM_CHANGE, (uint8_t)prog };
                     send_midi_message(msg, 2, &recorder);
+                }
+                else { 
+                    if (ev->type != SND_SEQ_EVENT_CLOCK &&
+                        ev->type != SND_SEQ_EVENT_SENSING)
+                    {
+                        printf("[ALSA] Unhandled event type %d\n", ev->type);
+                    }
                 }
             }
         }

@@ -1,3 +1,10 @@
+<!--
+Sysop-64
+https://github.com/Bloodmosher/Sysop-64
+
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
 # mon — C64 Hardware Monitor
 
 An interactive machine-language monitor for the Commodore 64, running on the ARM core of a DE-10 Nano. It communicates with the C64 over the Sysop-64 hardware bridge, giving you memory inspection and editing, a disassembler, an assembler, breakpoints, single-stepping, register display, file loading/saving, and bus-level DMA stepping — all from a terminal on the host.

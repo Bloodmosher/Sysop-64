@@ -1,0 +1,217 @@
+<!--
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sysop-64 SID Control</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Segoe UI,sans-serif;background:#101513;color:#d8e5dc}
+body{margin:0;padding:18px;background:#101513}
+main{max-width:1180px;margin:0 auto}
+h1{font-size:20px;margin:0 0 12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+button,input,select{background:#1c2521;color:#d8e5dc;border:1px solid #42544b;border-radius:6px;padding:7px 9px}
+button:hover{background:#28332e}
+label{display:inline-flex;align-items:center;gap:6px;color:#aebdb5}
+.plotrow{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:12px;align-items:stretch}
+canvas{width:100%;height:560px;background:#07100c;border:1px solid #33443b;border-radius:8px;display:block;touch-action:none}
+.rawpanel{height:560px;overflow:auto;background:#07100c;border:1px solid #33443b;border-radius:8px;font-family:ui-monospace,Consolas,monospace;font-size:12px}
+.rawtable{width:100%;border-collapse:collapse}
+.rawtable th{position:sticky;top:0;background:#172019;color:#d8e5dc;text-align:right;padding:5px;border-bottom:1px solid #33443b}
+.rawtable td{padding:3px 6px;text-align:right;color:#b8c8bf;border-bottom:1px solid #102018}
+.rawtable tr:nth-child(16n) td{border-top:1px solid #25352e}
+.rawtable tr:hover td{background:#1a2a22;color:#ffffff}
+.status{margin-top:10px;color:#93a69b;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.hint{margin-top:8px;color:#819188;font-size:13px}
+.help{margin-top:18px;padding-top:14px;border-top:1px solid #26362f;color:#b8c8bf;font-size:14px;line-height:1.45}
+.help h2{font-size:16px;margin:0 0 8px;color:#d8e5dc}
+.help p{margin:8px 0}
+.help ul{margin:8px 0 0 20px;padding:0}
+.help li{margin:4px 0}
+</style>
+</head>
+<body><main>
+<h1>Sysop-64 SID Control</h1>
+<div class="toolbar">
+<button id="galway">Load Galway</button>
+<button id="follin">Load Follin</button>
+<button id="average">Load Average</button>
+<button id="strong">Load Strong</button>
+<button id="extreme">Load Extreme</button>
+<button id="sysop64">Load Sysop64</button>
+<button id="default">Load Built-In</button>
+<button id="loadhex">Load Hex File</button>
+<input id="hexfile" type="file" accept=".hex,.txt" hidden>
+<button id="upload">Upload Whole Curve</button>
+<button id="export">Export Hex</button>
+<label><input id="active" type="checkbox" checked> custom active</label>
+<label>brush <input id="brush" type="range" min="0" max="80" value="10"></label>
+<label>scale model <select id="scalemodel"><option>6581</option><option>8580</option></select></label>
+<label>scale <input id="scale" value="2.0" size="5"></label>
+<button id="setscale">Set Scale</button>
+</div>
+<div class="toolbar">
+<label>Target SID
+          <select id="sidtarget">
+            <option value="1">SID1</option>
+            <option value="2">SID2</option>
+          </select>
+        </label>
+        <label>SID2
+          <button id="sid2enable">Enable</button>
+          <button id="sid2disable">Disable</button>
+          <select id="sid2base">
+            <option>DE00</option><option>DE20</option><option>DE40</option><option>DE60</option><option>DE80</option><option>DEA0</option><option>DEC0</option><option>DEE0</option>
+            <option>DF00</option><option>DF20</option><option>DF40</option><option>DF60</option><option>DF80</option><option>DFA0</option><option>DFC0</option><option>DFE0</option>
+          </select>
+        </label>
+        <label>SID model <select id="sidmodel"><option>6581</option><option>8580</option></select></label>
+<button id="setsidmodel">Set SID Type</button>
+<label>SID volume <input id="sidvolume" type="range" min="0" max="255" value="255"></label>
+<input id="sidvolumevalue" value="255" size="3">
+<button id="setsidvolume">Set Volume</button>
+</div>
+<div class="plotrow">
+<canvas id="plot" width="1100" height="560"></canvas>
+<div class="rawpanel"><table class="rawtable"><thead><tr><th>bucket</th><th>fc</th><th>hex</th><th>dec</th></tr></thead><tbody id="rawvalues"></tbody></table></div>
+</div>
+<div class="status" id="status">idle</div>
+<div class="hint">Drag the curve to edit. X is shown as the native 11-bit SID cutoff code 0..2047. Internally the FPGA still uses 1024 editable buckets, so each point covers two adjacent cutoff codes. Y is cutoff table value on a log scale. Changes are sent to the FPGA as you drag; Upload Whole Curve resends all 1024 buckets. SID type and volume controls apply immediately.</div>
+<section class="help">
+<h2>How to think about the curve</h2>
+<p>The curve maps the SID cutoff register to the effective filter cutoff used by the active SID core. The horizontal axis is labeled like the usual SID reference plots, using the full 11-bit cutoff code from $D415/$D416. The editable FPGA table is still 1024 entries: bucket N is used for SID cutoff codes 2N and 2N+1. Higher points sound brighter because more high frequencies pass through the filter. Lower points sound darker or more muffled. The SID model selector switches the SID core between its 6581 and 8580 behavior, and the volume control changes the HDMI SID output level without changing the table.</p>
+<ul>
+<li><strong>Move a region up</strong> to brighten instruments that use those cutoff values.</li>
+<li><strong>Move a region down</strong> to darken or soften them.</li>
+<li><strong>Move the rising knee left</strong> when low and middle cutoff settings feel too muffled.</li>
+<li><strong>Move the rising knee right</strong> when too much of the filter range opens too early.</li>
+<li><strong>A steeper curve</strong> makes filter sweeps more dramatic over a smaller register range.</li>
+<li><strong>A flatter curve</strong> makes sweeps more gradual and forgiving.</li>
+</ul>
+<p>The yellow markers show a few SID-Wizard-style filter-table test points, such as 90 10, 90 80, 90 C0, and 90 F0. Those markers are placed at approximately cutoff-byte << 3 on the native SID cutoff scale. If one test sounds wrong, edit near that marker first, then upload the whole curve or keep dragging for realtime changes.</p>
+</section>
+</main>
+<script>
+function $(id){return document.getElementById(id);}
+function sidQuery(){return `sid=${encodeURIComponent($("sidtarget").value)}`;}
+const N=1024, MIN=80, MAX=24000;
+const plot = { left: 60, right: 24, top: 24, bottom: 42 };
+let table=new Int16Array(N), dragging=false, pending=new Map(), timer=0;
+const c=document.getElementById('plot'), ctx=c.getContext('2d'), statusEl=document.getElementById('status'), rawValuesEl=document.getElementById('rawvalues');
+function logv(v){return Math.log(Math.max(MIN,Math.min(MAX,v)));}
+function plotW(){return c.width-plot.left-plot.right;}
+function plotH(){return c.height-plot.top-plot.bottom;}
+function xFor(i){return plot.left+i*plotW()/(N-1);}
+function yFor(v){const a=logv(MIN),b=logv(MAX);return plot.top+(b-logv(v))*plotH()/(b-a);}
+function idxFor(x){return Math.max(0,Math.min(N-1,Math.round((x-plot.left)*(N-1)/plotW())));}
+function valFor(y){const a=logv(MIN),b=logv(MAX);const t=(plot.top+plotH()-y)/plotH();return Math.round(Math.exp(a+t*(b-a)));}
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.fillStyle='#07100c';
+  ctx.fillRect(0,0,c.width,c.height);
+
+  const left=plot.left, right=c.width-plot.right, top=plot.top, bottom=c.height-plot.bottom;
+  ctx.font='12px Consolas';
+  ctx.lineWidth=1;
+
+  ctx.strokeStyle='#9aa79f';
+  ctx.strokeRect(left, top, right-left, bottom-top);
+
+  ctx.textBaseline='middle';
+  [100,200,500,1000,2000,5000,10000,20000].forEach(v=>{
+    const y=yFor(v);
+    const major = v===100 || v===1000 || v===10000;
+    ctx.strokeStyle = major ? '#2d4539' : '#1b2a23';
+    ctx.beginPath(); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke();
+    ctx.strokeStyle='#9aa79f';
+    ctx.beginPath(); ctx.moveTo(left-6,y); ctx.lineTo(left,y); ctx.stroke();
+    ctx.fillStyle = major ? '#d8e5dc' : '#7f9188';
+    ctx.fillText(String(v), 8, y);
+  });
+
+  ctx.textBaseline='top';
+  [0,128,256,384,512,640,768,896,1023].forEach(i=>{
+    const x=xFor(i);
+    const major = i===0 || i===512 || i===1023;
+    ctx.strokeStyle = major ? '#2d4539' : '#16231d';
+    ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,bottom); ctx.stroke();
+    ctx.strokeStyle='#9aa79f';
+    ctx.beginPath(); ctx.moveTo(x,bottom); ctx.lineTo(x,bottom+6); ctx.stroke();
+    ctx.fillStyle = major ? '#d8e5dc' : '#7f9188';
+    ctx.fillText(String(i===1023?2047:i*2), x-12, bottom+12);
+  });
+
+  ctx.strokeStyle='#55d27f';
+  ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(let i=0;i<N;i++){
+    let x=xFor(i), y=yFor(table[i]);
+    if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle='#e6c14f';
+  ctx.fillStyle='#e6c14f';
+  ctx.lineWidth=1;
+  [0x010,0x080,0x0c0,0x0f0].forEach(cutoffByte=>{
+    const i = Math.min(N-1, cutoffByte << 2);
+    let x=xFor(i);
+    ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,bottom);ctx.stroke();
+    ctx.fillText('90 '+cutoffByte.toString(16).padStart(2,'0').toUpperCase(),x+3,top+8);
+  });
+
+  ctx.fillStyle='#93a69b';
+  ctx.fillText('SID cutoff code (11-bit $D415/$D416)', left+plotW()/2-128, bottom+26);
+}
+function hex16(v){return (v<0?v+65536:v).toString(16).padStart(4,'0').toUpperCase();}
+function refreshRawTable(){
+  if(!rawValuesEl)return;
+  let html='';
+  for(let i=0;i<N;i++){const fc0=i*2, fc1=Math.min(2047, fc0+1);html+='<tr><td>'+i.toString(16).padStart(3,'0').toUpperCase()+'</td><td>$'+fc0.toString(16).padStart(3,'0').toUpperCase()+'-$'+fc1.toString(16).padStart(3,'0').toUpperCase()+'</td><td>$'+hex16(table[i])+'</td><td>'+table[i]+'</td></tr>';}
+  rawValuesEl.innerHTML=html;
+}
+function setStatus(s){statusEl.textContent=s;}
+async function loadPreset(name){let r=await fetch('/preset?name='+name);let txt=await r.text();let vals=txt.trim().split(/[\s,]+/).map(x=>parseInt(x,10));if(vals.length!==N)throw new Error('bad preset length '+vals.length);for(let i=0;i<N;i++)table[i]=vals[i];draw();refreshRawTable();setStatus('loaded '+name);}
+function parseHexEntry(token){let t=token.trim();let v;if(!t)return null;if(t.startsWith('-')||t.startsWith('+')||t.startsWith('0x')||t.startsWith('0X'))v=Number(t);else v=parseInt(t,16);if(!Number.isFinite(v)||Number.isNaN(v))throw new Error('bad value '+token);if(v>0x7fff)v-=0x10000;if(v<-32768||v>32767)throw new Error('out of range '+token);return v;}
+async function loadHexFile(file){let text=await file.text();text=text.replace(/\/\/.*$/gm,' ');let vals=text.split(/[\s,]+/).map(parseHexEntry).filter(v=>v!==null);if(vals.length!==N)throw new Error('expected '+N+' entries, got '+vals.length);for(let i=0;i<N;i++)table[i]=vals[i];draw();refreshRawTable();setStatus('loaded '+file.name);}
+function queueEntry(i,v){pending.set(i,v);if(!timer)timer=setTimeout(flushEntries,35);}
+async function flushEntries(){timer=0;let batch=[...pending.entries()];pending.clear();await fetch('/entries?'+sidQuery(),{method:'POST',body:batch.map(([i,v])=>i+' '+v).join('\n')});setStatus('sent '+batch.length+' changed entries');}
+function editAt(ev){const r=c.getBoundingClientRect();const x=(ev.clientX-r.left)*c.width/r.width,y=(ev.clientY-r.top)*c.height/r.height;const center=idxFor(x), val=valFor(y), brush=parseInt(document.getElementById('brush').value,10);for(let d=-brush;d<=brush;d++){let i=center+d;if(i<0||i>=N)continue;let w=brush?1-Math.abs(d)/(brush+1):1;let nv=Math.round(table[i]*(1-w)+val*w);nv=Math.max(-32768,Math.min(32767,nv));if(table[i]!==nv){table[i]=nv;queueEntry(i,nv);}}draw();refreshRawTable();}
+c.addEventListener('pointerdown',e=>{dragging=true;c.setPointerCapture(e.pointerId);editAt(e);});
+c.addEventListener('pointermove',e=>{if(dragging)editAt(e);});
+c.addEventListener('pointerup',e=>{dragging=false;});
+document.getElementById('galway').onclick=()=>loadPreset('galway').catch(e=>setStatus(e.message));
+document.getElementById('follin').onclick=()=>loadPreset('follin').catch(e=>setStatus(e.message));
+document.getElementById('average').onclick=()=>loadPreset('average').catch(e=>setStatus(e.message));
+document.getElementById('strong').onclick=()=>loadPreset('strong').catch(e=>setStatus(e.message));
+document.getElementById('extreme').onclick=()=>loadPreset('extreme').catch(e=>setStatus(e.message));
+document.getElementById('sysop64').onclick=()=>loadPreset('sysop64').catch(e=>setStatus(e.message));
+document.getElementById('default').onclick=()=>loadPreset('default').catch(e=>setStatus(e.message));
+document.getElementById('loadhex').onclick=()=>document.getElementById('hexfile').click();
+document.getElementById('hexfile').onchange=e=>{let f=e.target.files[0];if(f)loadHexFile(f).catch(err=>setStatus(err.message));e.target.value='';};
+document.getElementById('upload').onclick=async()=>{await fetch('/apply?'+sidQuery(),{method:'POST',body:Array.from(table).join('\n')});setStatus('uploaded whole curve');};
+document.getElementById('active').onchange=async e=>{await fetch('/activate?'+sidQuery()+'&enable='+(e.target.checked?1:0),{method:'POST'});setStatus(e.target.checked?'custom active':'built-in active');};
+document.getElementById('setscale').onclick=async()=>{let m=document.getElementById('scalemodel').value,v=document.getElementById('scale').value;await fetch('/scale?'+sidQuery()+'&model='+m+'&value='+encodeURIComponent(v),{method:'POST'});setStatus('scale '+m+' = '+v);};
+const sidVolume=document.getElementById('sidvolume'), sidVolumeValue=document.getElementById('sidvolumevalue');
+function clampVolume(v){v=parseInt(v,10);return Number.isFinite(v)?Math.max(0,Math.min(255,v)):0;}
+sidVolume.oninput=()=>{sidVolumeValue.value=sidVolume.value;};
+sidVolumeValue.onchange=()=>{let v=clampVolume(sidVolumeValue.value);sidVolume.value=v;sidVolumeValue.value=v;};
+document.getElementById('setsidmodel').onclick=async()=>{let m=document.getElementById('sidmodel').value;await fetch('/sid-model?'+sidQuery()+'&model='+m,{method:'POST'});setStatus('SID model '+m);};
+document.getElementById('setsidvolume').onclick=async()=>{let v=clampVolume(sidVolumeValue.value);sidVolume.value=v;sidVolumeValue.value=v;await fetch('/sid-volume?value='+v,{method:'POST'});setStatus('SID volume '+v);};
+document.getElementById('export').onclick=()=>{let s=Array.from(table).map(v=>(v<0?(v+65536):v).toString(16).padStart(4,'0')).join('\n')+'\n';let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'text/plain'}));a.download='sidcontrol-filter.hex';a.click();URL.revokeObjectURL(a.href);};
+loadPreset('galway').then(()=>fetch('/activate?enable=1',{method:'POST'}));
+
+$('sid2enable').addEventListener('click', async () => {
+  await fetch('/sid2-enable?enable=1', { method: 'POST' });
+});
+$('sid2disable').addEventListener('click', async () => {
+  await fetch('/sid2-enable?enable=0', { method: 'POST' });
+});
+$('sid2base').addEventListener('change', async () => {
+  await fetch(`/sid2-base?base=0x${$('sid2base').value}`, { method: 'POST' });
+});
+</script></body></html>
