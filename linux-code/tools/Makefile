@@ -41,7 +41,7 @@ SYSOP64_SRCS = sysop64/sysop64_state.cpp sysop64/sysop64_c64_keyboard.cpp sysop6
 SYSOP64_HDRS = sysop64/sysop64_internal.h
 # sidplaydma is intentionally disabled for now; keep the target text below
 # commented so it is easy to restore later.
-INSTALL_BINARIES = bypass_keypress c64busview cmd dmatest dmatiming easyflash ipeek iotest load loadbin loadcart loadkernal sysop_menu mon mon_io peek pll_config poke pokekeybuf playsound port01 sidcontrol sidwiz read_d64 reu run screenshot setcolor showmsg showpic sys sysop64 sysop_reset_watch tickreplay_receiver tickstream vicstream video_info
+INSTALL_BINARIES = bypass_keypress c64busview cmd dmatest dmatiming easyflash ipeek iotest load loadbin loadcart loadkernal sysop_menu mon mon_io peek pll_config poke pokekeybuf playsound port01 sidcontrol sidwiz read_d64 reu run screenshot setcolor showmsg showpic sys sysop64 sysop_reset_watch video_info
 
 .PHONY: all install clean mon mon_io easyflash read_d64 screenshot sysop_menu sysop64 tickreplay_0001_helper port01 $(SIMPLE_TOOLS)
 
@@ -55,9 +55,6 @@ install: all
 	for bin in $(INSTALL_BINARIES); do \
 		$(INSTALL) -m 0755 $(BUILD_DIR)/$$bin $(INSTALL_DIR)/; \
 	done
-	for script in $(PYTHON_TOOLS); do \
-		$(INSTALL) -m 0755 $(BUILD_DIR)/$$script $(INSTALL_DIR)/; \
-	done
 	$(INSTALL) -d $(INSTALL_DIR)/../lib
 	$(INSTALL) -m 0644 $(LIBSYSOP64_SHARED) $(INSTALL_DIR)/../lib/libsysop64.so
 	$(INSTALL) -m 0644 $(BUILD_DIR)/sidcontrol.html $(INSTALL_DIR)/sidcontrol.html
@@ -65,14 +62,12 @@ install: all
 	for asset in $(READ_D64_ASSET_BINS); do \
 		$(INSTALL) -m 0644 $$asset $(INSTALL_DIR)/; \
 	done
-	for asset in $(TICKREPLAY_ASSET_BINS); do \
-		$(INSTALL) -m 0644 $$asset $(INSTALL_DIR)/; \
-	done
 	for asset in $(ASSETS); do \
 		$(INSTALL) -m 0644 $$asset $(INSTALL_DIR)/; \
 	done
 	for script in $(SCRIPTS); do \
-		$(INSTALL) -m 0755 $$script $(INSTALL_DIR)/; \
+		sed 's/\r$$//' $$script > $(INSTALL_DIR)/$$(basename $$script); \
+		chmod 0755 $(INSTALL_DIR)/$$(basename $$script); \
 	done
 
 $(BUILD_DIR):
@@ -160,4 +155,3 @@ sysop64: $(SYSOP64_SRCS) $(SYSOP64_HDRS) | $(BUILD_DIR)
 
 clean:
 	$(RM) $(addprefix $(BUILD_DIR)/, $(INSTALL_BINARIES)) $(PYTHON_TOOL_OUTPUTS) $(BUILD_DIR)/sidcontrol.html $(BUILD_DIR)/sidwiz.html $(READ_D64_ASSET_BINS) $(TICKREPLAY_ASSET_BINS) $(C64_TEST_ASSET_BINS)
-
