@@ -1,3 +1,10 @@
+<!--
+Sysop-64
+https://github.com/Bloodmosher/Sysop-64
+
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
 # sysop64
 
 The `sysop64` process is the core runtime application for the Sysop-64 hardware

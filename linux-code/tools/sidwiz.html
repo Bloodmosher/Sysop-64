@@ -1,0 +1,105 @@
+<!--
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sysop-64 SID-Wizard Control</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,Segoe UI,sans-serif;background:#0f1412;color:#dce9e1}
+body{margin:0;padding:16px;background:#0f1412}
+main{max-width:1320px;margin:0 auto}
+h1{font-size:20px;margin:0 0 12px}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+button,input,select,textarea{background:#1a2420;color:#dce9e1;border:1px solid #40534b;border-radius:6px;padding:7px 9px;font:inherit}
+button:hover{background:#26322d}.active{background:#2b6245;border-color:#65c78d;color:#fff}.muted{color:#8ea098}.status{font-family:ui-monospace,Consolas,monospace;color:#9eb1a8;margin-top:10px}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px}.panel{border:1px solid #2b3b34;border-radius:8px;background:#101a16;padding:12px;min-width:0}
+.panel h2{font-size:15px;margin:0 0 10px;color:#eef8f2}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:6px;max-height:360px;overflow:auto;padding-right:4px}
+.slotbtn,.filebtn{text-align:left;font-family:ui-monospace,Consolas,monospace;min-height:42px;white-space:normal}.slotnum{color:#8fcaa6}.empty{opacity:.55}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}.field label{display:block;font-size:12px;color:#9eb1a8;margin-bottom:4px}.field input{box-sizing:border-box;width:100%;font-family:ui-monospace,Consolas,monospace;text-transform:uppercase}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px;margin-top:12px}.tablebox textarea{box-sizing:border-box;width:100%;height:160px;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.35}.tablebox h3{font-size:13px;margin:0 0 6px;color:#c8d8d0}
+.raw{font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.4;white-space:pre-wrap;color:#b7c6bf;background:#07100c;border:1px solid #26362f;border-radius:6px;padding:8px;max-height:210px;overflow:auto}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<h1>Sysop-64 SID-Wizard Control</h1>
+<div class="toolbar">
+<button id="refreshAll">Refresh Song Instruments</button>
+<button id="refreshInst">Refresh Selected Instrument</button>
+<label>selected slot <select id="slotSelect"></select></label>
+<span id="folderLabel" class="muted"></span>
+</div>
+<div class="layout">
+<section class="panel">
+<h2>Song Instrument Slots</h2>
+<div id="slots" class="grid"></div>
+</section>
+<section class="panel">
+<h2>Instrument Folder</h2>
+<div id="files" class="grid"></div>
+</section>
+</div>
+<section class="panel" style="margin-top:14px">
+<h2>Selected Instrument Parameters</h2>
+<div class="formgrid" id="fields"></div>
+<div class="tables">
+<div class="tablebox"><h3>WF/ARP Program</h3><textarea id="wfText"></textarea><button data-apply="wf">Apply WF/ARP</button></div>
+<div class="tablebox"><h3>Pulse Program</h3><textarea id="pulseText"></textarea><button data-apply="pulse">Apply Pulse</button></div>
+<div class="tablebox"><h3>Filter Program</h3><textarea id="filterText"></textarea><button data-apply="filter">Apply Filter</button></div>
+</div>
+<h2 style="margin-top:14px">Raw Slot</h2>
+<div id="raw" class="raw"></div>
+</section>
+<div id="status" class="status">idle</div>
+</main>
+<script>
+const MAX=128, NAME_OFF=120;
+let selectedSlot=1, slots=[], files=[], bytes=new Uint8Array(MAX);
+const header=[
+  ['00','Control'],['01','ADHR hi'],['02','ADHR lo'],['03','ADSR AD'],['04','ADSR SR'],['05','VIBR freq/amp'],['06','VIBR delay/speed'],['07','WF/ARP speed'],['08','Default chord'],['09','OCTA semis'],['0A','Pulse ptr'],['0B','Filter ptr'],['0C','Gate-off WF'],['0D','Gate-off PW'],['0E','Gate-off FILT'],['0F','First WF']
+];
+function $(id){return document.getElementById(id)}
+function status(s){$('status').textContent=s}
+function hx(v){return Number(v).toString(16).padStart(2,'0').toUpperCase()}
+function parseHexByte(v){let s=String(v).trim(); if(!s)return NaN; if(s.startsWith('$'))s='0x'+s.slice(1); let n=Number(s.startsWith('0x')?s:('0x'+s)); return Number.isInteger(n)&&n>=0&&n<=255?n:NaN}
+function slotName(data){let s=''; for(let i=NAME_OFF;i<MAX;i++){let c=data[i]; s+=c>=32&&c<=126?String.fromCharCode(c):' '} return s.trim()}
+function programRange(kind){let p=bytes[0x0A], f=bytes[0x0B]; if(kind==='wf')return [0x10, (p>0x10&&p<MAX?p:(f>0x10&&f<MAX?f:NAME_OFF))]; if(kind==='pulse')return [p||NAME_OFF, (f>p&&f<MAX?f:NAME_OFF)]; return [f||NAME_OFF, NAME_OFF]}
+function regionText(a,b){let out=[]; for(let i=a;i<b;i+=3){let row=[]; for(let j=0;j<3&&i+j<b;j++)row.push(hx(bytes[i+j])); out.push(row.join(' ')); if(bytes[i]===0xFF)break} return out.join('\n')}
+function renderRaw(){let out=[]; for(let i=0;i<MAX;i+=16){out.push(hx(i)+': '+Array.from(bytes.slice(i,i+16)).map(hx).join(' '))} $('raw').textContent=out.join('\n')}
+function renderFields(){
+  let html='';
+  for(const [off,label] of header){let o=parseInt(off,16); html+=`<div class="field"><label>$${off} ${label}</label><input data-off="${o}" value="${hx(bytes[o])}" maxlength="4"></div>`}
+  html+=`<div class="field"><label>Name</label><input id="nameInput" value="${slotName(bytes).replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" maxlength="8" style="text-transform:none"></div>`;
+  $('fields').innerHTML=html;
+  document.querySelectorAll('input[data-off]').forEach(inp=>inp.addEventListener('change',()=>setByte(Number(inp.dataset.off),parseHexByte(inp.value))));
+  $('nameInput').addEventListener('change',applyName);
+  $('wfText').value=regionText(...programRange('wf'));
+  $('pulseText').value=regionText(...programRange('pulse'));
+  $('filterText').value=regionText(...programRange('filter'));
+  renderRaw();
+}
+async function setByte(off,val){if(Number.isNaN(val)){status('bad hex byte');return} bytes[off]=val; await fetch(`/api/byte?slot=${selectedSlot}&offset=${off}&value=${val}`,{method:'POST'}); renderFields(); status(`slot ${selectedSlot} $${hx(off)}=$${hx(val)}`)}
+async function applyName(){let s=$('nameInput').value.padEnd(8,' ').slice(0,8); for(let i=0;i<8;i++){let v=s.charCodeAt(i)&255; bytes[NAME_OFF+i]=v; await fetch(`/api/byte?slot=${selectedSlot}&offset=${NAME_OFF+i}&value=${v}`,{method:'POST'})} await refreshAll(); await loadInstrument(selectedSlot); status('name updated')}
+function parseRegion(text){return text.split(/[\s,]+/).filter(Boolean).map(parseHexByte)}
+async function applyRegion(kind){let [a,b]=programRange(kind); let vals=parseRegion($(kind==='wf'?'wfText':kind==='pulse'?'pulseText':'filterText').value); if(vals.some(Number.isNaN)){status('bad hex in '+kind);return} for(let i=a;i<b;i++)bytes[i]=0; vals.slice(0,b-a).forEach((v,i)=>bytes[a+i]=v); await fetch(`/api/instrument?slot=${selectedSlot}`,{method:'POST',body:Array.from(bytes).map(hx).join(' ')}); await loadInstrument(selectedSlot); await refreshAll(); status(kind+' program applied')}
+async function loadInstrument(slot){selectedSlot=slot; $('slotSelect').value=String(slot); let r=await fetch(`/api/instrument?slot=${slot}`); let j=await r.json(); bytes=new Uint8Array(j.bytes); renderFields(); document.querySelectorAll('.slotbtn').forEach(b=>b.classList.toggle('active',Number(b.dataset.slot)===slot)); status(`loaded slot ${slot}`)}
+function renderSlots(){
+  $('slotSelect').innerHTML=slots.map(s=>`<option value="${s.slot}">${s.slot}</option>`).join('');
+  $('slots').innerHTML=slots.map(s=>`<button class="slotbtn ${s.slot===selectedSlot?'active':''} ${s.name?'':'empty'}" data-slot="${s.slot}"><span class="slotnum">${String(s.slot).padStart(2,'0')}</span> ${s.name||'...'}</button>`).join('');
+  document.querySelectorAll('.slotbtn').forEach(b=>b.addEventListener('click',async()=>{let slot=Number(b.dataset.slot); await fetch(`/api/select?slot=${slot}`,{method:'POST'}); await loadInstrument(slot)}));
+  $('slotSelect').onchange=async()=>{let slot=Number($('slotSelect').value); await fetch(`/api/select?slot=${slot}`,{method:'POST'}); await loadInstrument(slot)};
+}
+function renderFiles(){
+  $('files').innerHTML=files.length?files.map(f=>`<button class="filebtn" data-file="${f.file.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}">${f.display}</button>`).join(''):'<span class="muted">No instrument folder, or no .swi/.prg files found.</span>';
+  document.querySelectorAll('.filebtn').forEach(b=>b.addEventListener('click',async()=>{let file=b.dataset.file; let r=await fetch(`/api/load-file?slot=${selectedSlot}&file=${encodeURIComponent(file)}`,{method:'POST'}); if(!r.ok){status('load failed');return} await refreshAll(); await loadInstrument(selectedSlot); status(`loaded ${file} into slot ${selectedSlot}`)}));
+}
+async function refreshAll(){let r=await fetch('/api/list'); let j=await r.json(); slots=j.slots; files=j.files; $('folderLabel').textContent=j.folder?`folder: ${j.folder}`:'no folder'; renderSlots(); renderFiles(); status('refreshed song instruments')}
+document.querySelectorAll('button[data-apply]').forEach(b=>b.addEventListener('click',()=>applyRegion(b.dataset.apply)));
+$('refreshAll').onclick=refreshAll; $('refreshInst').onclick=()=>loadInstrument(selectedSlot);
+refreshAll().then(()=>loadInstrument(selectedSlot)).catch(e=>status(e.message));
+</script>
+</body>
+</html>

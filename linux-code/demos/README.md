@@ -1,3 +1,10 @@
+<!--
+Sysop-64
+https://github.com/Bloodmosher/Sysop-64
+
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
 # demos
 
 Example programs that exercise various features of [libsysop64](../libsysop64/README.md).

@@ -1,3 +1,10 @@
+<!--
+Sysop-64
+https://github.com/Bloodmosher/Sysop-64
+
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
 # libsysop64
 
 C library for controlling a Commodore 64 from the ARM core of a DE-10 Nano (Intel Cyclone V SoC + FPGA). Provides a unified API for hardware bridge access, C64 memory read/write via DMA, cartridge/kernal loading, bus sampling, video palette control, audio playback, keyboard/joystick input, and an IPC client for communicating with the `sysop64` terminal emulator process.

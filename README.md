@@ -1,3 +1,10 @@
+<!--
+Sysop-64
+https://github.com/Bloodmosher/Sysop-64
+
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
 # SYSOP-64 - System Operator for the Commodore 64 - C64 Linux Cartridge
 
 ### SYSOP-64 is a cartridge for the C64 that uses the DE10-Nano to power new capabilities. It provides HDMI output at 1080P, a DMA engine and programming model, a frame buffer that can be overlaid on top of the HDMI C64 video output, and a full Linux OS.

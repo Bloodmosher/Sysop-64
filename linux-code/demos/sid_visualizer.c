@@ -82,6 +82,7 @@ extern "C" {
 #define SCREEN_WIDTH  1920
 #define SCREEN_HEIGHT 1080
 #define NUM_VOICES    3
+#define NUM_WAVEFORMS 4   /* voice 1, voice 2, voice 3, combined post-filter output */
 #define SAMPLE_RATE   48000
 #define HISTORY_SIZE  (SAMPLE_RATE * 10)   /* 10 seconds of ring buffer */
 #define SID_BASE_ADDR 0xD400
@@ -133,7 +134,7 @@ typedef struct {
 } OscState;
 
 typedef struct {
-    float           buffer[NUM_VOICES][HISTORY_SIZE];
+    float           buffer[NUM_WAVEFORMS][HISTORY_SIZE];
     int             head;
     pthread_mutex_t mutex;
     bool            sampler_running;
@@ -185,9 +186,16 @@ MouseState mouse_state = {
 };
 MenuState menu_state = { false, false, false, false, true, -1 };
 
+typedef enum {
+    WAVEFORM_MODE_VOICES,
+    WAVEFORM_MODE_ALL,
+    WAVEFORM_MODE_COMBINED
+} WaveformMode;
+
 bool enable_mouse      = false;
 bool enable_ui_mapping = false;
 bool enable_ui_debug   = false;
+WaveformMode waveform_mode = WAVEFORM_MODE_VOICES;
 
 /* SID-Wizard C64 memory addresses used by the interaction layer */
 uint16_t g_sidwiz_addr_selinst_plus_1              = 0xb6b;
@@ -203,12 +211,13 @@ static float convert_sample_to_float(uint16_t raw)
     return ((float)s / 32768.0f) * 6.0f;
 }
 
-static float get_sample(uint64_t data, int voice_idx)
+static float get_sample(uint64_t data, int waveform_idx)
 {
-    switch (voice_idx) {
+    switch (waveform_idx) {
     case 0: return convert_sample_to_float((uint16_t)(data & 0xFFFF));
     case 1: return convert_sample_to_float((uint16_t)((data >> 16) & 0xFFFF));
     case 2: return convert_sample_to_float((uint16_t)((data >> 32) & 0xFFFF));
+    case 3: return convert_sample_to_float((uint16_t)((data >> 48) & 0xFFFF));
     default: return 0.0f;
     }
 }
@@ -237,7 +246,7 @@ void *sampler_thread_func(void *arg)
 
         pthread_mutex_lock(&history.mutex);
         history.head = (history.head + 1) % HISTORY_SIZE;
-        for (int v = 0; v < NUM_VOICES; v++)
+        for (int v = 0; v < NUM_WAVEFORMS; v++)
             history.buffer[v][history.head] = get_sample(sid_voices_data, v);
         history.total_samples_written++;
         pthread_mutex_unlock(&history.mutex);
@@ -929,13 +938,25 @@ void render_frame_with_budget(uint32_t *buffer, float zoom_level,
 {
     clear_buffer(buffer, COLOR_BG);
 
-    const uint32_t voice_colors[3] = { COLOR_VOICE_1, COLOR_VOICE_2, COLOR_VOICE_3 };
-    const int      amplitude_scale = 40;
-    const int      voice_centers[3] = {
-        SCREEN_HEIGHT / 4,
-        SCREEN_HEIGHT / 2,
-        (SCREEN_HEIGHT * 3) / 4
+    const uint32_t waveform_colors[NUM_WAVEFORMS] = {
+        COLOR_VOICE_1,
+        COLOR_VOICE_2,
+        COLOR_VOICE_3,
+        0xFF88FF88   /* combined post-filter output */
     };
+    int waveform_indices[NUM_WAVEFORMS] = { 0, 1, 2, 3 };
+    int waveform_count = NUM_VOICES;
+
+    if (waveform_mode == WAVEFORM_MODE_ALL) {
+        waveform_count = NUM_WAVEFORMS;
+    } else if (waveform_mode == WAVEFORM_MODE_COMBINED) {
+        waveform_indices[0] = 3;
+        waveform_count = 1;
+    }
+
+    int amplitude_scale = 40;
+    if (waveform_mode == WAVEFORM_MODE_ALL)
+        amplitude_scale = (40 * NUM_VOICES) / NUM_WAVEFORMS;
 
     int samples_to_show = (int)((SAMPLE_RATE / ACTUAL_FRAME_RATE) * zoom_level);
     if (samples_to_show > HISTORY_SIZE) samples_to_show = HISTORY_SIZE;
@@ -950,20 +971,24 @@ void render_frame_with_budget(uint32_t *buffer, float zoom_level,
 
     /* Draw anti-aliased waveforms */
     if (menu_state.visualize_waveforms) {
-        for (int v = 0; v < NUM_VOICES; v++) {
+        for (int v = 0; v < waveform_count; v++) {
+            int waveform_idx = waveform_indices[v];
+            int center_y = (waveform_mode == WAVEFORM_MODE_COMBINED) ?
+                           (SCREEN_HEIGHT / 2) :
+                           ((SCREEN_HEIGHT * (v + 1)) / (waveform_count + 1));
             int buf_idx = snapshot_head;
             int prev_x  = SCREEN_WIDTH - 1;
-            int prev_y  = voice_centers[v] -
-                          (int)(history.buffer[v][buf_idx] * amplitude_scale);
+            int prev_y  = center_y -
+                          (int)(history.buffer[waveform_idx][buf_idx] * amplitude_scale);
 
             for (int x = SCREEN_WIDTH - 2; x >= 0; x--) {
                 buf_idx -= sample_step;
                 if (buf_idx < 0) buf_idx += HISTORY_SIZE;
 
-                float sample = history.buffer[v][buf_idx];
-                int   y      = voice_centers[v] - (int)(sample * amplitude_scale);
+                float sample = history.buffer[waveform_idx][buf_idx];
+                int   y      = center_y - (int)(sample * amplitude_scale);
 
-                draw_line_aa(buffer, prev_x, prev_y, x, y, voice_colors[v]);
+                draw_line_aa(buffer, prev_x, prev_y, x, y, waveform_colors[waveform_idx]);
                 prev_x = x;
                 prev_y = y;
             }
@@ -1070,6 +1095,10 @@ int main(int argc, char *argv[])
                 "  --mouse          Enable mouse pointer and Settings menu overlay.\n"
                 "  --ui-map         Enable mouse + SID-Wizard editor click mapping.\n"
                 "  --ui-map-debug   Enable mouse + UI mapping + visible region outlines.\n"
+                "  --waveforms MODE Select waveform display: voices, all, or combined.\n"
+                "                   voices: three pre-filter voice lanes (default).\n"
+                "                   all: three voice lanes plus post-filter combined.\n"
+                "                   combined: post-filter combined lane only.\n"
                 "  --help, --?      Show this help message and exit.\n"
                 "\n"
                 "Arguments:\n"
@@ -1094,6 +1123,24 @@ int main(int argc, char *argv[])
         } else if (strcmp(argv[i], "--ui-map-debug") == 0) {
             enable_mouse = enable_ui_mapping = enable_ui_debug = true;
             printf("UI mapping with debug grid enabled\n");
+        } else if (strcmp(argv[i], "--waveforms") == 0) {
+            if (++i >= argc) {
+                fprintf(stderr, "--waveforms requires an argument: voices, all, or combined\n");
+                return 1;
+            }
+            if (strcmp(argv[i], "voices") == 0) {
+                waveform_mode = WAVEFORM_MODE_VOICES;
+                printf("Waveforms: voices\n");
+            } else if (strcmp(argv[i], "all") == 0) {
+                waveform_mode = WAVEFORM_MODE_ALL;
+                printf("Waveforms: all voices plus combined\n");
+            } else if (strcmp(argv[i], "combined") == 0) {
+                waveform_mode = WAVEFORM_MODE_COMBINED;
+                printf("Waveforms: combined post-filter output\n");
+            } else {
+                fprintf(stderr, "Unknown --waveforms mode '%s'; expected voices, all, or combined\n", argv[i]);
+                return 1;
+            }
         } else {
             zoom_level = atof(argv[i]);
             if (zoom_level < 0.1f)  zoom_level = 0.1f;

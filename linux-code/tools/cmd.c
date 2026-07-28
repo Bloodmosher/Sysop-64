@@ -192,6 +192,25 @@ static int parse_cmd(const char *arg)
     if (strcmp(arg, "--debug-overlay-hide")   == 0 || strcmp(arg, "24") == 0) return 24;
     if (strcmp(arg, "--fb-push-back")         == 0 || strcmp(arg, "30") == 0) return 30;
     if (strcmp(arg, "--fb-push-front")        == 0 || strcmp(arg, "31") == 0) return 31;
+    if (strcmp(arg, "--busmon-chl-alert-show")== 0 || strcmp(arg, "45") == 0) return 45;
+    if (strcmp(arg, "--busmon-chl-alert-hide")== 0 || strcmp(arg, "46") == 0) return 46;
+    if (strcmp(arg, "--busmon-chl-override-enable") == 0 || strcmp(arg, "47") == 0) return 47;
+    if (strcmp(arg, "--busmon-chl-override-disable")== 0 || strcmp(arg, "48") == 0) return 48;
+    if (strcmp(arg, "--vic-debug-sampler-start") == 0 || strcmp(arg, "49") == 0) return 49;
+    if (strcmp(arg, "--vic-debug-sampler-stop")  == 0 || strcmp(arg, "50") == 0) return 50;
+    if (strcmp(arg, "--sid-alternate") == 0 || strcmp(arg, "51") == 0) return 51;
+    if (strcmp(arg, "--sid-default")    == 0 || strcmp(arg, "53") == 0) return 53;
+    if (strcmp(arg, "--sid-6581")   == 0 || strcmp(arg, "54") == 0) return 54;
+    if (strcmp(arg, "--sid-8580")   == 0 || strcmp(arg, "55") == 0) return 55;
+    // archived isevic_debugger: if (strcmp(arg, "--isevic-replay-disable")      == 0 || strcmp(arg, "56") == 0) return 56;
+
+    char *end = NULL;
+    long raw_cmd = strtol(arg, &end, 0);
+    if (end != arg && *end == '\0' && raw_cmd >= 0 && raw_cmd <= UINT16_MAX)
+    {
+        return (int)raw_cmd;
+    }
+
     return -1;
 }
 
@@ -228,6 +247,17 @@ int main(int argc, char **argv)
         printf("  --sid-sampler-stop            Stop SID sampler\n");
         printf("  --debug-overlay-show          Show debug info overlay\n");
         printf("  --debug-overlay-hide          Hide debug info overlay\n");
+        printf("  --busmon-chl-alert-show       Show debug overlay in red on CHL mismatch\n");
+        printf("  --busmon-chl-alert-hide       Disable CHL mismatch debug overlay alert\n");
+        printf("  --busmon-chl-override-enable  Drive system CHL from inferred $0001\n");
+        printf("  --busmon-chl-override-disable Drive system CHL from physical wires\n");
+        printf("  --vic-debug-sampler-start     Start VIC debug capture sampler\n");
+        printf("  --vic-debug-sampler-stop      Stop VIC debug capture sampler\n");
+        printf("  --sid-alternate               Select alternate Sysop-64 SID\n");
+        printf("  --sid-default                 Select default SID output\n");
+        printf("  --sid-6581                   Set SID model to 6581\n");
+        printf("  --sid-8580                   Set SID model to 8580\n");
+        // archived isevic_debugger: printf("  --isevic-replay-disable       Return isevic_top to the live C64 bus\n");
         printf("  --measure-latency             Measure HPS<->FPGA latency in C64 cycles\n");
         printf("  --set-nmi-vector <hex-addr>   Set vector to use with NMI intercept\n");
         printf("  --set-sid-volume <0-255>      Set SID volume (HDMI output)\n");
@@ -238,7 +268,11 @@ int main(int argc, char **argv)
         printf("  12=sdram-write-test, 13=trigger-sampler, 14=fb-enable, 15=fb-disable,\n");
         printf("  16=fb-flip, 17=cart-16k-enable, 18=kernal-enable, 19=kernal-disable,\n");
         printf("  20=video-reset, 21=sid-sampler-arm, 22=sid-sampler-stop,\n");
-        printf("  23=debug-overlay-show, 24=debug-overlay-hide, 30=fb-push-back, 31=fb-push-front\n");
+        printf("  23=debug-overlay-show, 24=debug-overlay-hide, 30=fb-push-back, 31=fb-push-front,\n");
+        printf("  45=busmon-chl-alert-show, 46=busmon-chl-alert-hide,\n");
+        printf("  47=busmon-chl-override-enable, 48=busmon-chl-override-disable,\n");
+        printf("  49=vic-debug-sampler-start, 50=vic-debug-sampler-stop,\n");
+        printf("  51=sid-alternate, 53=sid-default, 54=sid-6581, 55=sid-8580\n");
         printf("\n");
         return 0;
     }

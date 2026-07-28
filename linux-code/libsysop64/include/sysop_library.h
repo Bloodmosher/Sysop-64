@@ -76,6 +76,7 @@ void sysop_dma_queue_unfreeze();
 
 uint32_t sysop_dma_tag_data();
 void sysop_dma_write_tag(uint32_t tag);
+void sysop_dma_write_0001(uint16_t helper_patch_addr, uint8_t value);
 
 int sysop_load(const char* filename);
 int sysop_load_buffer(uint8_t* buffer, int count);
@@ -141,6 +142,39 @@ struct sysop_c64_bus_sample
 void sysop_sampler_wait_not_busy();
 void sysop_sampler_start();
 uint64_t sysop_sampler_get_sample(uint32_t index, struct sysop_c64_bus_sample* pSample);
+
+struct sysop_tick_sampler_config
+{
+  uint8_t selected_tick;
+  bool continuous;
+  bool writes_only;
+  bool range_filter;
+  uint16_t range_start;
+  uint16_t range_end;
+  uint32_t capture_sample_limit;
+  uint32_t buffer_start_address;
+  uint32_t buffer_end_address;
+};
+
+struct sysop_tick_sampler_status
+{
+  uint32_t control;
+  uint32_t current_write_address;
+  uint32_t wrap_count;
+  uint32_t sample_count;
+  uint32_t fifo_write_count;
+  uint32_t sdram_write_count;
+  uint32_t dropped;
+};
+
+void sysop_tick_sampler_default_config(struct sysop_tick_sampler_config* config);
+void sysop_tick_sampler_configure(const struct sysop_tick_sampler_config* config);
+void sysop_tick_sampler_start();
+void sysop_tick_sampler_stop();
+void sysop_tick_sampler_read_status(struct sysop_tick_sampler_status* status);
+void* sysop_tick_sampler_map_buffer(uint32_t size);
+void* sysop_tick_sampler_map_buffer_at(uint32_t address, uint32_t size);
+uint32_t sysop_tick_sampler_ring_used_bytes(uint32_t read_offset, uint32_t write_addr, uint32_t wrap_count, uint32_t* hps_wrap_count);
 
 void sysop_set_palette_entry(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
 void sysop_get_palette_entry(uint8_t index, uint8_t* r, uint8_t* g, uint8_t* b);
@@ -227,10 +261,42 @@ uint8_t sysop_screenshot_status();
 uint32_t sysop_screenshot_read(uint16_t addr);
 
 uint32_t sysop_read_status_1();
+uint32_t sysop_read_inferred_port_01_info();
+uint8_t sysop_read_inferred_port_01();
+void sysop_reset_c64_bus_monitor();
+uint32_t sysop_read_port01_debug0();
+uint32_t sysop_read_port01_debug1();
+uint32_t sysop_read_port01_debug2();
+uint32_t sysop_read_port01_debug3();
+uint32_t sysop_read_port01_debug4();
+uint32_t sysop_read_port01_debug5();
+uint32_t sysop_read_port01_debug6();
+uint32_t sysop_read_port01_debug7();
+uint32_t sysop_read_port01_debug8();
+uint32_t sysop_read_port01_debug9();
+uint32_t sysop_read_port01_debug10();
+uint32_t sysop_read_port01_debug11();
+uint32_t sysop_read_port01_debug12();
+uint32_t sysop_read_port01_debug13();
+uint32_t sysop_read_port01_debug14();
+uint32_t sysop_read_port01_debug15();
+uint32_t sysop_read_port01_debug16();
+uint32_t sysop_read_port01_debug17();
 uint32_t sysop_dropped_frames();
 void sysop_video_reset();
 void sysop_set_dma_timing_ntsc(uint16_t timing);
 void sysop_set_dma_timing_pal(uint16_t timing);
+void sysop_sid_filter_table_write(uint16_t index, int16_t value);
+void sysop_sid_filter_table_write_sid(uint8_t sid, uint16_t index, int16_t value);
+void sysop_sid_filter_use_custom(bool enable);
+void sysop_sid_filter_use_custom_sid(uint8_t sid, bool enable);
+void sysop_sid_filter_set_scale_6581(uint16_t scale_q8_8);
+void sysop_sid_filter_set_scale_8580(uint16_t scale_q8_8);
+void sysop_sid_filter_set_scale_6581_sid(uint8_t sid, uint16_t scale_q8_8);
+void sysop_sid_filter_set_scale_8580_sid(uint8_t sid, uint16_t scale_q8_8);
+void sysop_sid2_enable(bool enable);
+void sysop_sid2_set_base(uint16_t base_addr);
+void sysop_sid_set_model(uint8_t sid, bool model_8580);
 
 void sysop_enable_easyflash_dma_trigger();
 void sysop_disable_easyflash_dma_trigger();

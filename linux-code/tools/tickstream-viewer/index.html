@@ -1,0 +1,103 @@
+<!--
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Sysop-64 Project
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sysop-64 Tickstream Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <h1>Tickstream Viewer</h1>
+      <p>Open a raw c64_tick_sampler capture and inspect bus samples.</p>
+    </div>
+    <label class="file-picker">
+      <input id="fileInput" type="file" accept=".bin,.dat,.raw,*/*">
+      Open Capture
+    </label>
+  </header>
+
+  <main>
+    <section class="toolbar" aria-label="Viewer controls">
+      <label>
+        Start sample
+        <input id="startSample" type="number" min="0" step="1" value="0">
+      </label>
+      <label>
+        Samples shown
+        <input id="sampleCount" type="number" min="16" max="4096" step="16" value="512">
+      </label>
+      <label>
+        Address filter
+        <input id="addressFilter" type="text" placeholder="optional, e.g. d400-d41f">
+      </label>
+      <label class="checkbox">
+        <input id="reverseLanes" type="checkbox">
+        Reverse 32-byte record lanes
+      </label>
+      <button id="prevButton" type="button">Prev</button>
+      <button id="nextButton" type="button">Next</button>
+      <button id="applyButton" type="button">Apply</button>
+    </section>
+
+    <section class="summary" aria-label="Capture summary">
+      <div>
+        <span class="label">File</span>
+        <strong id="fileName">No file loaded</strong>
+      </div>
+      <div>
+        <span class="label">Size</span>
+        <strong id="fileSize">-</strong>
+      </div>
+      <div>
+        <span class="label">Samples</span>
+        <strong id="sampleTotal">-</strong>
+      </div>
+      <div>
+        <span class="label">Window</span>
+        <strong id="windowInfo">-</strong>
+      </div>
+    </section>
+
+    <section class="waveform-panel">
+      <canvas id="waveform" width="1400" height="720"></canvas>
+    </section>
+
+    <section class="table-panel">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Raw</th>
+            <th>Frame</th>
+            <th>Tick</th>
+            <th>Line</th>
+            <th>Cycle</th>
+            <th>Addr</th>
+            <th>Data</th>
+            <th>R/W</th>
+            <th>PHI2</th>
+            <th>BA</th>
+            <th>/IRQ</th>
+            <th>/DMA</th>
+            <th>CH</th>
+            <th>HI</th>
+            <th>LO</th>
+            <th>$01=CHL</th>
+          </tr>
+        </thead>
+        <tbody id="sampleRows">
+          <tr><td colspan="17">Open a capture file to begin.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

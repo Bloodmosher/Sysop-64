@@ -50,15 +50,15 @@ uint64_t sysop_sampler_get_sample(uint32_t index, struct sysop_c64_bus_sample* p
             pSample->vic_line = (pData[i] & 0x7FC000000000)>>38;
             pSample->sample_tick = (pData[i] & 0x1F800000000000)>>47;
             //pSample->phi2_counter_val = (pData[i] & 0xFFE0000000000000)>>53;
-            pSample->_roml = (pData[i] & 0x2000000000000000)>>61;
-            pSample->_romh = (pData[i] & 0x1000000000000000)>>60;
-            pSample->_io1 = (pData[i] & 0x800000000000000)>>59;
-            pSample->_io2 = (pData[i] & 0x400000000000000)>>58;
-            pSample->_charen = (pData[i] & 0x200000000000000)>>57;
-            pSample->_hiram = (pData[i] & 0x100000000000000)>>56;
-            pSample->_loram = (pData[i] & 0x80000000000000)>>55;
-            pSample->_exrom = (pData[i] & 0x40000000000000)>>54;
-            pSample->_game = (pData[i] & 0x20000000000000)>>53;
+            pSample->_roml = (pData[i] >> 61) & 1;
+            pSample->_romh = (pData[i] >> 60) & 1;
+            pSample->_io1 = (pData[i] >> 59) & 1;
+            pSample->_io2 = (pData[i] >> 58) & 1;
+            pSample->_charen = (pData[i] >> 57) & 1;
+            pSample->_hiram = (pData[i] >> 56) & 1;
+            pSample->_loram = (pData[i] >> 55) & 1;
+            pSample->_exrom = (pData[i] >> 54) & 1;
+            pSample->_game = (pData[i] >> 53) & 1;
         }
 
         return pData[i];
