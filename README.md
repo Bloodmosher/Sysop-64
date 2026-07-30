@@ -26,6 +26,8 @@ Copyright (c) 2026 Sysop-64 Project
 
 ## 📢 News and Updates
 
+- ▶️ 2026.07.27: C64 Descent: Descent On Sysop-64 video released on YouTube
+- 📃 2026.06.27: [Chocolate Descent Sysop-64 fork](https://github.com/Bloodmosher/ChocolateDescent-Sysop-64) released
 - ▶️ 2026.06.27: C64 Doom: Doom On Sysop-64 video released on YouTube
 - 📃 2026.06.27: [Alpha preview FPGA core update 062726](https://github.com/Bloodmosher/Sysop-64/releases/tag/alpha-update-062726) released, first release with PCM audio capability 
 - 📃 2026.06.27: [Chocolate Doom Sysop-64 fork](https://github.com/Bloodmosher/chocolate-doom-sysop-64) released
