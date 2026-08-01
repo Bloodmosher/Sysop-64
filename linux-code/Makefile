@@ -18,7 +18,7 @@ demos: lib
 	$(MAKE) -C demos
 
 
-install: tools
+install:
 	$(MAKE) -C tools install
 
 clean: clean-tools clean-demos clean-lib
